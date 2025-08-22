@@ -1,0 +1,144 @@
+name: Sync from notedown main repo
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:     # Allow manual triggering
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          repository: notedownorg/notedown
+          path: source-repo
+          
+      - name: Verify source repo checkout
+        run: |
+          echo "Checking if source-repo directory exists after checkout:"
+          ls -la
+          if [ -d "source-repo" ]; then
+            echo "✓ source-repo exists"
+            echo "Contents of source-repo:"
+            ls -la source-repo/
+            if [ -d "source-repo/neovim" ]; then
+              echo "✓ neovim subdirectory exists"
+              echo "Contents of source-repo/neovim:"
+              ls -la source-repo/neovim/
+            else
+              echo "✗ neovim subdirectory missing"
+            fi
+          else
+            echo "✗ source-repo directory missing after checkout"
+            echo "Available directories:"
+            find . -type d -maxdepth 2
+          fi
+          
+      - name: Get source commit SHA
+        id: source-sha
+        run: |
+          cd source-repo
+          if [ -d "neovim" ]; then
+            echo "sha=$(git log -1 --format=%H -- neovim)" >> $GITHUB_OUTPUT
+            echo "short_sha=$(git log -1 --format=%h -- neovim)" >> $GITHUB_OUTPUT
+          else
+            echo "sha=$(git log -1 --format=%H)" >> $GITHUB_OUTPUT
+            echo "short_sha=$(git log -1 --format=%h)" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Copy files from source repo
+        run: |
+          echo "Working directory: $(pwd)"
+          echo "Looking for source repo:"
+          find . -name "source-repo" -type d
+          
+          # First clean up existing files (except .git, .github, and source-repo)
+          echo "Cleaning up existing files..."
+          find . -maxdepth 1 -not -name '.git' -not -name '.github' -not -name 'source-repo' -not -name '.' -not -name '..' -exec rm -rf {} +
+          
+          # Navigate to where the source repo actually is
+          if [ -d "source-repo" ]; then
+            echo "Found source-repo, checking neovim subdirectory:"
+            ls -la source-repo/
+            
+            if [ -d "source-repo/neovim" ]; then
+              echo "Found neovim directory, copying contents:"
+              ls -la source-repo/neovim/
+              cp -r source-repo/neovim/* ./
+            else
+              echo "No neovim directory found in source-repo"
+              exit 1
+            fi
+          else
+            echo "No source-repo directory found"
+            exit 1
+          fi
+          
+          # Clean up the source-repo directory now that we're done with it
+          echo "Cleaning up source-repo directory..."
+          rm -rf source-repo
+          
+          echo "Files after copy and cleanup:"
+          ls -la
+          
+      - name: Add mirror notice to README
+        run: |
+          if [ -f README.md ]; then
+            if ! grep -q "This is a mirror" README.md 2>/dev/null; then
+              echo "> [!NOTE]" > temp_readme.md
+              echo "> This is a mirror of the neovim directory from [notedownorg/notedown](https://github.com/notedownorg/notedown/tree/main/neovim)." >> temp_readme.md
+              echo "> Changes should be made in the source repository." >> temp_readme.md
+              echo "" >> temp_readme.md
+              cat README.md >> temp_readme.md
+              mv temp_readme.md README.md
+              echo "Added mirror notice to README.md"
+            else
+              echo "Mirror notice already exists in README.md"
+            fi
+          else
+            echo "No README.md found after copy"
+          fi
+          
+      - name: Check for changes
+        id: changes
+        run: |
+          echo "=== Git Status Before Adding ==="
+          git status
+          
+          echo "=== Files in Directory ==="
+          ls -la
+          
+          git add -A
+          
+          echo "=== Git Status After Adding ==="
+          git status
+          
+          echo "=== Git Diff Cached ==="
+          git diff --cached --name-only || true
+          
+          if git diff --cached --quiet; then
+            echo "No changes detected"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected!"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Commit and push changes
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "syncing ${{ steps.source-sha.outputs.short_sha }} from notedownorg/notedown"
+          git push
