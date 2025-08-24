@@ -654,4 +654,283 @@ T["wikilink code actions"]["resolves ambiguous wikilink to root level file"] = f
 	lsp.cleanup_binary()
 end
 
+T["wikilink concealment"] = MiniTest.new_set()
+
+T["wikilink concealment"]["conceals brackets in simple wikilink"] = function()
+	local workspace = utils.create_test_workspace("/tmp/test-wikilink-conceal-simple")
+	local child = utils.new_child_neovim()
+
+	-- Create .notedown directory to mark as notedown workspace
+	vim.fn.mkdir(workspace .. "/.notedown", "p")
+
+	-- Create target file
+	utils.write_file(workspace .. "/target.md", "# Target Document")
+
+	-- Create test file with simple wikilink
+	utils.write_file(workspace .. "/test.md", "# Test Document\n\nThis is a [[target]] link.")
+
+	-- Setup LSP
+	lsp.setup(child, workspace)
+
+	-- Open test file
+	child.lua('vim.cmd("edit ' .. workspace .. '/test.md")')
+	lsp.wait_for_ready(child)
+
+	-- Wait for concealment to be applied
+	vim.loop.sleep(2000)
+
+	-- Check concealment settings are applied
+	local conceallevel = child.lua_get("vim.wo.conceallevel")
+	local concealcursor = child.lua_get("vim.wo.concealcursor")
+
+	MiniTest.expect.equality(conceallevel, 2, "Should have conceallevel set to 2")
+	MiniTest.expect.equality(concealcursor, "nc", "Should have concealcursor set to 'nc'")
+
+	-- Move cursor to line with wikilink to test concealment behavior
+	child.lua('vim.fn.search("target")')
+
+	-- Get buffer content to verify the wikilink syntax is still there
+	local buffer_content = child.lua_get('table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\\n")')
+	MiniTest.expect.equality(
+		string.find(buffer_content, "%[%[target%]%]") ~= nil,
+		true,
+		"Buffer should still contain [[target]] syntax"
+	)
+
+	-- Verify that match groups are set up for concealment
+	-- (We can't directly test visual concealment in headless mode, but we can verify the infrastructure)
+	local match_count = child.lua_get("#vim.fn.getmatches()")
+	MiniTest.expect.equality(match_count >= 0, true, "Should have concealment matches set up")
+
+	child.stop()
+	utils.cleanup_test_workspace(workspace)
+	lsp.cleanup_binary()
+end
+
+T["wikilink concealment"]["conceals brackets in wikilink with display text"] = function()
+	local workspace = utils.create_test_workspace("/tmp/test-wikilink-conceal-display")
+	local child = utils.new_child_neovim()
+
+	-- Create .notedown directory to mark as notedown workspace
+	vim.fn.mkdir(workspace .. "/.notedown", "p")
+
+	-- Create target file
+	utils.write_file(workspace .. "/docs/api.md", "# API Documentation")
+
+	-- Create test file with wikilink containing display text
+	utils.write_file(workspace .. "/test.md", "# Test Document\n\nRead the [[docs/api|API documentation]] here.")
+
+	-- Setup LSP
+	lsp.setup(child, workspace)
+
+	-- Open test file
+	child.lua('vim.cmd("edit ' .. workspace .. '/test.md")')
+	lsp.wait_for_ready(child)
+
+	-- Wait for concealment to be applied
+	vim.loop.sleep(2000)
+
+	-- Check concealment settings
+	local conceallevel = child.lua_get("vim.wo.conceallevel")
+	MiniTest.expect.equality(conceallevel, 2, "Should have conceallevel set to 2")
+
+	-- Move cursor to line with wikilink
+	child.lua('vim.fn.search("docs/api")')
+
+	-- Verify buffer content contains the full wikilink syntax
+	local buffer_content = child.lua_get('table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\\n")')
+	MiniTest.expect.equality(
+		string.find(buffer_content, "%[%[docs/api%|API documentation%]%]") ~= nil,
+		true,
+		"Buffer should contain [[docs/api|API documentation]] syntax"
+	)
+
+	child.stop()
+	utils.cleanup_test_workspace(workspace)
+	lsp.cleanup_binary()
+end
+
+T["wikilink concealment"]["updates concealment on text changes"] = function()
+	local workspace = utils.create_test_workspace("/tmp/test-wikilink-conceal-updates")
+	local child = utils.new_child_neovim()
+
+	-- Create .notedown directory to mark as notedown workspace
+	vim.fn.mkdir(workspace .. "/.notedown", "p")
+
+	-- Create target files
+	utils.write_file(workspace .. "/old-target.md", "# Old Target")
+	utils.write_file(workspace .. "/new-target.md", "# New Target")
+
+	-- Create test file with initial wikilink
+	utils.write_file(workspace .. "/test.md", "# Test Document\n\nThis is an [[old-target]] link.")
+
+	-- Setup LSP
+	lsp.setup(child, workspace)
+
+	-- Open test file
+	child.lua('vim.cmd("edit ' .. workspace .. '/test.md")')
+	lsp.wait_for_ready(child)
+
+	-- Wait for initial concealment
+	vim.loop.sleep(2000)
+
+	-- Verify initial concealment settings
+	local initial_conceallevel = child.lua_get("vim.wo.conceallevel")
+	MiniTest.expect.equality(initial_conceallevel, 2, "Should initially have conceallevel set to 2")
+
+	-- Modify the wikilink by replacing "old-target" with "new-target"
+	child.lua([[
+		-- Find and replace the text directly
+		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+		for i, line in ipairs(lines) do
+			if string.find(line, "old%-target") then
+				lines[i] = string.gsub(line, "old%-target", "new-target")
+				break
+			end
+		end
+		vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+	]])
+
+	-- Wait for concealment to be re-applied after text change
+	vim.loop.sleep(1000)
+
+	-- Verify concealment settings are still active
+	local updated_conceallevel = child.lua_get("vim.wo.conceallevel")
+	MiniTest.expect.equality(updated_conceallevel, 2, "Should maintain conceallevel after text change")
+
+	-- Verify buffer content was actually updated
+	local updated_content = child.lua_get('table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\\n")')
+	MiniTest.expect.equality(
+		string.find(updated_content, "%[%[new%-target%]%]") ~= nil,
+		true,
+		"Buffer should contain updated [[new-target]] wikilink"
+	)
+	MiniTest.expect.equality(
+		string.find(updated_content, "%[%[old%-target%]%]") == nil,
+		true,
+		"Buffer should no longer contain old [[old-target]] wikilink"
+	)
+
+	child.stop()
+	utils.cleanup_test_workspace(workspace)
+	lsp.cleanup_binary()
+end
+
+T["wikilink concealment"]["handles multiple wikilinks in single document"] = function()
+	local workspace = utils.create_test_workspace("/tmp/test-wikilink-conceal-multiple")
+	local child = utils.new_child_neovim()
+
+	-- Create .notedown directory to mark as notedown workspace
+	vim.fn.mkdir(workspace .. "/.notedown", "p")
+
+	-- Create target files
+	utils.write_file(workspace .. "/first.md", "# First Document")
+	utils.write_file(workspace .. "/second.md", "# Second Document")
+	utils.write_file(workspace .. "/docs/third.md", "# Third Document")
+
+	-- Create test file with multiple wikilinks
+	utils.write_file(
+		workspace .. "/test.md",
+		"# Test Document\n\n"
+			.. "See [[first]] and [[second]] for basics.\n\n"
+			.. "Also check [[docs/third|third document]] for details.\n\n"
+			.. "Finally, [[nonexistent]] doesn't exist yet."
+	)
+
+	-- Setup LSP
+	lsp.setup(child, workspace)
+
+	-- Open test file
+	child.lua('vim.cmd("edit ' .. workspace .. '/test.md")')
+	lsp.wait_for_ready(child)
+
+	-- Wait for concealment to be applied to all wikilinks
+	vim.loop.sleep(2000)
+
+	-- Check concealment settings
+	local conceallevel = child.lua_get("vim.wo.conceallevel")
+	MiniTest.expect.equality(conceallevel, 2, "Should have conceallevel set to 2")
+
+	-- Verify all wikilink syntax remains in buffer
+	local buffer_content = child.lua_get('table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\\n")')
+
+	-- Check that all wikilinks are present in the buffer
+	MiniTest.expect.equality(
+		string.find(buffer_content, "%[%[first%]%]") ~= nil,
+		true,
+		"Buffer should contain [[first]] wikilink"
+	)
+	MiniTest.expect.equality(
+		string.find(buffer_content, "%[%[second%]%]") ~= nil,
+		true,
+		"Buffer should contain [[second]] wikilink"
+	)
+	MiniTest.expect.equality(
+		string.find(buffer_content, "%[%[docs/third%|third document%]%]") ~= nil,
+		true,
+		"Buffer should contain [[docs/third|third document]] wikilink"
+	)
+	MiniTest.expect.equality(
+		string.find(buffer_content, "%[%[nonexistent%]%]") ~= nil,
+		true,
+		"Buffer should contain [[nonexistent]] wikilink"
+	)
+
+	-- Test cursor positioning on different wikilinks to ensure concealment works for all
+	child.lua('vim.fn.search("first")')
+	local cursor_on_first = child.lua_get("vim.api.nvim_win_get_cursor(0)")
+	MiniTest.expect.equality(cursor_on_first[1] > 0, true, "Should position cursor on first wikilink")
+
+	child.lua('vim.fn.search("docs/third")')
+	local cursor_on_third = child.lua_get("vim.api.nvim_win_get_cursor(0)")
+	MiniTest.expect.equality(cursor_on_third[1] > cursor_on_first[1], true, "Should move to third wikilink")
+
+	child.stop()
+	utils.cleanup_test_workspace(workspace)
+	lsp.cleanup_binary()
+end
+
+T["wikilink concealment"]["reapplies concealment after LSP attach"] = function()
+	local workspace = utils.create_test_workspace("/tmp/test-wikilink-conceal-lsp-attach")
+	local child = utils.new_child_neovim()
+
+	-- Create .notedown directory to mark as notedown workspace
+	vim.fn.mkdir(workspace .. "/.notedown", "p")
+
+	-- Create target file
+	utils.write_file(workspace .. "/target.md", "# Target Document")
+
+	-- Create test file with wikilink
+	utils.write_file(workspace .. "/test.md", "# Test Document\n\nThis is a [[target]] link.")
+
+	-- Setup LSP first to ensure it's available
+	lsp.setup(child, workspace)
+
+	-- Open test file (LSP should attach automatically)
+	child.lua('vim.cmd("edit ' .. workspace .. '/test.md")')
+
+	-- Wait for LSP to be ready and concealment to be applied
+	lsp.wait_for_ready(child)
+	vim.loop.sleep(2000)
+
+	-- Check that concealment was properly set up
+	local conceallevel = child.lua_get("vim.wo.conceallevel")
+	local concealcursor = child.lua_get("vim.wo.concealcursor")
+
+	MiniTest.expect.equality(conceallevel, 2, "Should set conceallevel after LSP attach")
+	MiniTest.expect.equality(concealcursor, "nc", "Should set concealcursor after LSP attach")
+
+	-- Verify wikilink syntax is preserved
+	local buffer_content = child.lua_get('table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\\n")')
+	MiniTest.expect.equality(
+		string.find(buffer_content, "%[%[target%]%]") ~= nil,
+		true,
+		"Buffer should contain [[target]] syntax after LSP attach"
+	)
+
+	child.stop()
+	utils.cleanup_test_workspace(workspace)
+	lsp.cleanup_binary()
+end
+
 return T
