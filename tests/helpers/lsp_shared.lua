@@ -152,7 +152,7 @@ function M.open_file(file_path)
 	-- Ensure document is properly opened in LSP
 	child.lua(string.format(
 		[[
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_fname(%q)
 			local content = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")

@@ -158,4 +158,150 @@ T["module functions"]["get_workspace_status returns table"] = function()
 	child.stop()
 end
 
+T["module functions"]["get_notedown_command_client without timeout"] = function()
+	local child = utils.new_child_neovim()
+
+	-- Test when no LSP clients exist
+	child.lua('require("notedown").setup({ server = { cmd = { "echo", "mock-server" } } })')
+
+	-- Mock vim.lsp.get_clients to return empty
+	child.lua([[
+		_G.test_clients = {}
+		vim.lsp.get_clients = function() return _G.test_clients end
+	]])
+
+	-- Should return nil and not crash
+	local result = child.lua_get('require("notedown")._get_notedown_command_client()')
+	MiniTest.expect.equality(result, vim.NIL)
+
+	child.stop()
+end
+
+T["module functions"]["get_notedown_command_client with timeout - no clients"] = function()
+	local child = utils.new_child_neovim()
+
+	child.lua('require("notedown").setup({ server = { cmd = { "echo", "mock-server" } } })')
+
+	-- Mock vim.lsp.get_clients to return empty
+	child.lua([[
+		_G.test_clients = {}
+		vim.lsp.get_clients = function() return _G.test_clients end
+		
+		-- Mock vim.wait to avoid actual delays in tests
+		vim.wait = function(ms) return true end
+		
+		-- Mock vim.loop.now() for timeout testing
+		_G.test_time = 0
+		vim.loop.now = function() 
+			_G.test_time = _G.test_time + 150 -- Simulate time passing
+			return _G.test_time 
+		end
+	]])
+
+	-- Should timeout after checking multiple times
+	local result = child.lua_get('require("notedown")._get_notedown_command_client(500)')
+	MiniTest.expect.equality(result, vim.NIL)
+
+	child.stop()
+end
+
+T["module functions"]["get_notedown_command_client with timeout - client appears"] = function()
+	local child = utils.new_child_neovim()
+
+	child.lua('require("notedown").setup({ server = { cmd = { "echo", "mock-server" } } })')
+
+	-- Mock scenario where client appears after some time
+	child.lua([[
+		_G.test_clients = {}
+		_G.call_count = 0
+		
+		-- Mock client that supports executeCommand
+		_G.mock_client = {
+			name = "notedown",
+			server_capabilities = {
+				executeCommandProvider = { commands = { "notedown.getConcealRanges" } }
+			}
+		}
+		
+		vim.lsp.get_clients = function()
+			_G.call_count = _G.call_count + 1
+			-- Return client after 2 calls to simulate delay
+			if _G.call_count >= 2 then
+				return { _G.mock_client }
+			else
+				return {}
+			end
+		end
+		
+		-- Mock vim.wait to avoid actual delays
+		vim.wait = function(ms) return true end
+		
+		-- Mock vim.loop.now() - time doesn't advance to avoid timeout
+		vim.loop.now = function() return 100 end
+	]])
+
+	-- Should find the client after retrying
+	local result = child.lua_get('require("notedown")._get_notedown_command_client(1000)')
+	MiniTest.expect.no_equality(result, vim.NIL)
+	MiniTest.expect.equality(result.name, "notedown")
+
+	child.stop()
+end
+
+T["module functions"]["get_notedown_command_client without executeCommand support"] = function()
+	local child = utils.new_child_neovim()
+
+	child.lua('require("notedown").setup({ server = { cmd = { "echo", "mock-server" } } })')
+
+	-- Mock client without executeCommand support
+	child.lua([[
+		_G.mock_client_no_exec = {
+			name = "notedown",
+			server_capabilities = {
+				-- No executeCommandProvider
+			}
+		}
+		
+		vim.lsp.get_clients = function()
+			return { _G.mock_client_no_exec }
+		end
+	]])
+
+	-- Should return nil when client doesn't support executeCommand
+	local result = child.lua_get('require("notedown")._get_notedown_command_client()')
+	MiniTest.expect.equality(result, vim.NIL)
+
+	child.stop()
+end
+
+T["module functions"]["get_notedown_command_client with valid client"] = function()
+	local child = utils.new_child_neovim()
+
+	child.lua('require("notedown").setup({ server = { cmd = { "echo", "mock-server" } } })')
+
+	-- Mock valid client with executeCommand support
+	child.lua([[
+		_G.mock_client_valid = {
+			name = "notedown",
+			server_capabilities = {
+				executeCommandProvider = { 
+					commands = { "notedown.getConcealRanges", "notedown.getListItemBoundaries" }
+				}
+			}
+		}
+		
+		vim.lsp.get_clients = function()
+			return { _G.mock_client_valid }
+		end
+	]])
+
+	-- Should return the valid client
+	local result = child.lua_get('require("notedown")._get_notedown_command_client()')
+	MiniTest.expect.no_equality(result, vim.NIL)
+	MiniTest.expect.equality(result.name, "notedown")
+	MiniTest.expect.no_equality(result.server_capabilities.executeCommandProvider, nil)
+
+	child.stop()
+end
+
 return T

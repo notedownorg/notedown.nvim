@@ -106,7 +106,7 @@ T["task state completion"]["provides default task states without config"] = func
 		_G.test_completion_result = nil
 		_G.test_completion_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			
@@ -222,7 +222,7 @@ T["task state completion"]["provides custom task states with config"] = function
 		_G.test_custom_completion_result = nil
 		_G.test_custom_completion_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			
@@ -343,7 +343,7 @@ T["task state completion"]["includes conceal information in documentation"] = fu
 		_G.test_conceal_completion_result = nil
 		_G.test_conceal_completion_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			
@@ -440,7 +440,7 @@ T["task state completion"]["filters completions based on prefix"] = function()
 		_G.test_filter_completion_result = nil
 		_G.test_filter_completion_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			
@@ -538,7 +538,7 @@ T["task state completion"]["completes outside of wikilink context"] = function()
 		_G.test_context_completion_result = nil
 		_G.test_context_completion_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			
@@ -625,7 +625,7 @@ T["task state completion"]["includes aliases in completions"] = function()
 		_G.test_alias_completion_result = nil
 		_G.test_alias_completion_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			
@@ -745,7 +745,7 @@ T["task state completion"]["includes descriptions in documentation"] = function(
 		_G.test_desc_completion_result = nil
 		_G.test_desc_completion_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			
@@ -859,7 +859,7 @@ T["task state completion"]["groups main values with their aliases"] = function()
 		_G.test_grouping_completion_result = nil
 		_G.test_grouping_completion_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			

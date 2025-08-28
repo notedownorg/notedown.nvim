@@ -18,7 +18,7 @@ require("notedown").setup()
 
 vim.api.nvim_create_user_command("NotedownReload", function()
 	-- Stop existing LSP clients
-	vim.lsp.stop_client(vim.lsp.get_active_clients({ name = "notedown" }))
+	vim.lsp.stop_client(vim.lsp.get_clients({ name = "notedown" }))
 
 	-- Clear module cache
 	package.loaded["notedown"] = nil
@@ -48,10 +48,13 @@ Notedown Workspace Status:
   File: %s
   In Notedown Workspace: %s
   Should Use Notedown Parser: %s
+  LSP Server Status: %s (%d clients)
   ]],
 		status.file_path or "No file",
 		status.is_notedown_workspace and "Yes" or "No",
-		status.should_use_notedown and "Yes" or "No"
+		status.should_use_notedown and "Yes" or "No",
+		status.lsp_status or "Unknown",
+		status.lsp_client_count or 0
 	)
 
 	if status.workspace_path then

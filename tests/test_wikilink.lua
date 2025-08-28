@@ -159,7 +159,7 @@ T["wikilink completion"]["provides comprehensive suggestions"] = function()
 		_G.test_completion_result = nil
 		_G.test_completion_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			
@@ -255,7 +255,7 @@ T["wikilink completion"]["provides comprehensive suggestions"] = function()
 	end
 
 	-- Verify that the core completion functionality is working
-	local has_lsp_clients = child.lua_get("#vim.lsp.get_active_clients() > 0")
+	local has_lsp_clients = child.lua_get("#vim.lsp.get_clients() > 0")
 	MiniTest.expect.equality(has_lsp_clients, true)
 
 	-- Verify we got all expected completion types
@@ -292,7 +292,7 @@ T["wikilink diagnostics"]["shows conflicts for ambiguous links"] = function()
 
 	-- Ensure document is properly opened in LSP and indexed
 	child.lua([[
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			-- Send didOpen to ensure LSP tracks this document
@@ -381,7 +381,7 @@ T["wikilink code actions"]["resolves ambiguous wikilink to root level file"] = f
 
 	-- Ensure document is properly opened in LSP and indexed
 	child.lua([[
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			-- Send didOpen to ensure LSP tracks this document
@@ -404,7 +404,7 @@ T["wikilink code actions"]["resolves ambiguous wikilink to root level file"] = f
 		_G.test_code_actions_result = nil
 		_G.test_code_actions_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			
@@ -532,7 +532,7 @@ T["wikilink code actions"]["resolves ambiguous wikilink to root level file"] = f
 		_G.test_guide_actions_result = nil
 		_G.test_guide_actions_error = nil
 		
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			

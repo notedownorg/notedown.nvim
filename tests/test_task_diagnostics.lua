@@ -76,7 +76,7 @@ T["task diagnostics"]["detects invalid task states"] = function()
 
 	-- Ensure document is properly opened in LSP
 	child.lua([[
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			-- Send didOpen to ensure LSP tracks this document
@@ -225,7 +225,7 @@ This is regular text with no tasks.
 
 	-- Ensure document is properly opened in LSP
 	child.lua([[
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			client.notify('textDocument/didOpen', {
@@ -315,7 +315,7 @@ This is regular text with no tasks.
 
 	-- Ensure document is opened in LSP
 	child.lua([[
-		local client = vim.lsp.get_active_clients()[1]
+		local client = vim.lsp.get_clients()[1]
 		if client then
 			local uri = vim.uri_from_bufnr(0)
 			client.notify('textDocument/didOpen', {

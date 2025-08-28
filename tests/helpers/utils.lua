@@ -85,7 +85,7 @@ end
 
 -- Expect that LSP client exists with given name
 function M.expect_lsp_client(child, client_name)
-	local clients = child.lua_get("vim.lsp.get_active_clients()")
+	local clients = child.lua_get("vim.lsp.get_clients()")
 	local found = false
 
 	for _, client in ipairs(clients) do

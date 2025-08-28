@@ -261,7 +261,7 @@ T["folding integration"]["LSP server provides folding ranges"] = function()
 	vim.loop.sleep(1000)
 
 	-- Verify LSP client is active
-	local client_count = child.lua_get("#vim.lsp.get_active_clients()")
+	local client_count = child.lua_get("#vim.lsp.get_clients()")
 	MiniTest.expect.equality(client_count > 0, true, "Should have active LSP client")
 
 	child.stop()

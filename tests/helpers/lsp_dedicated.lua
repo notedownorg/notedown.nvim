@@ -60,7 +60,7 @@ function M.wait_for_lsp_clients(child, timeout)
 	local start_time = vim.loop.now()
 
 	while vim.loop.now() - start_time < timeout do
-		local client_count = child.lua_get("#vim.lsp.get_active_clients()")
+		local client_count = child.lua_get("#vim.lsp.get_clients()")
 		if client_count > 0 then
 			-- LSP client found, wait a bit more for it to be fully ready
 			vim.loop.sleep(1000)
