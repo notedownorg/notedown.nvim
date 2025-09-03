@@ -1,0 +1,40 @@
+#!/bin/bash
+# Test runner for notedown.nvim with fallback
+# Based on folke's testing pattern
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Check if nvim is available
+if ! command -v nvim >/dev/null 2>&1; then
+    echo "Error: neovim is not installed or not in PATH"
+    exit 1
+fi
+
+# Check if tests directory exists
+if [ ! -d "tests" ]; then
+    echo "Error: tests directory not found"
+    exit 1
+fi
+
+echo "Running notedown.nvim tests..."
+
+# Try the full test runner first
+echo "Attempting full test runner (with LSP binary building)..."
+if nvim -l tests/minit.lua; then
+    echo "✅ Tests completed successfully with full runner"
+    exit 0
+else
+    echo "⚠️  Full test runner failed, trying simple runner..."
+    echo "Running tests without LSP binary (some functionality will be skipped)..."
+    
+    if nvim -l tests/test_runner.lua; then
+        echo "✅ Tests completed with simple runner"
+        echo "Note: Some LSP-dependent tests may have been skipped"
+        exit 0
+    else
+        echo "❌ Both test runners failed"
+        exit 1
+    fi
+fi

@@ -1,0 +1,2 @@
+# This file ensures the .notedown directory is tracked by git
+# The presence of a .notedown directory marks this as a Notedown workspace

@@ -1,0 +1,10 @@
+#!/bin/bash
+# Test runner for notedown.nvim
+# Based on folke's testing pattern
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Run tests using nvim -l (following folke's pattern)
+nvim -l tests/minit.lua
