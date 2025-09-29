@@ -83,3 +83,14 @@ vim.api.nvim_create_user_command("NotedownMoveDown", function()
 end, {
 	desc = "Move list item down",
 })
+
+vim.api.nvim_create_user_command("NotedownExecuteCode", function(opts)
+	local language = opts.args ~= "" and opts.args or nil
+	require("notedown").execute_code_blocks(language)
+end, {
+	desc = "Execute code blocks in current document",
+	nargs = "?",
+	complete = function()
+		return { "go" } -- Will expand as more languages are supported
+	end,
+})

@@ -90,6 +90,7 @@ local spec_files = {
 	"task_diagnostics_spec",
 	"folding_spec",
 	"list_text_object_spec",
+	"code_execution_spec",
 }
 
 -- Run all spec files

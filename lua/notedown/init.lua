@@ -272,6 +272,45 @@ function M.setup_list_text_object()
 	end, { buffer = true, silent = true, desc = "list item" })
 end
 
+-- Execute code blocks via LSP command
+function M.execute_code_blocks(language)
+	local client = get_notedown_command_client()
+	if not client then
+		return nil
+	end
+
+	local params = {
+		command = "notedown.executeCodeBlocks",
+		arguments = {
+			{ textDocument = { uri = vim.uri_from_bufnr(0) }, language = language },
+		},
+	}
+
+	-- Make synchronous request for immediate feedback
+	local result, err = client.request_sync("workspace/executeCommand", params, 30000) -- 30 second timeout
+	if err then
+		vim.notify("Code execution failed: " .. tostring(err), vim.log.levels.ERROR)
+		return nil
+	end
+
+	if result and result.result then
+		local exec_result = result.result
+		if exec_result.applied and exec_result.changes then
+			-- Apply the workspace edit returned by LSP
+			vim.lsp.util.apply_workspace_edit(exec_result.changes, client.offset_encoding)
+			vim.notify("Code execution completed successfully", vim.log.levels.INFO)
+		elseif exec_result.error then
+			vim.notify("Code execution error: " .. exec_result.error, vim.log.levels.ERROR)
+		else
+			vim.notify("Code execution completed with no changes", vim.log.levels.WARN)
+		end
+	else
+		vim.notify("Unexpected response from code execution", vim.log.levels.ERROR)
+	end
+
+	return result
+end
+
 -- Set up wikilink concealment using LSP
 function M.setup_wikilink_concealment(bufnr)
 	bufnr = bufnr or vim.api.nvim_get_current_buf()
