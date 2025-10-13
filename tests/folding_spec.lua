@@ -103,7 +103,11 @@ local function test_folding_setup_notedown_files()
 			local foldenable = vim.wo.foldenable
 
 			assert_equals(foldmethod, "expr", "Foldmethod should be expr")
-			assert_equals(foldexpr, "v:lua.vim.lsp.foldexpr()", "Foldexpr should use LSP")
+			assert_equals(
+				foldexpr,
+				"v:lua.require('notedown').notedown_foldexpr()",
+				"Foldexpr should use custom notedown fold expression"
+			)
 			assert_equals(foldenable, true, "Folding should be enabled")
 		end
 	else
@@ -551,7 +555,11 @@ local function test_manual_fold_operations()
 	local foldenable = vim.wo.foldenable
 
 	assert_equals(foldmethod, "expr", "Should have expr fold method")
-	assert_equals(foldexpr, "v:lua.vim.lsp.foldexpr()", "Should use LSP fold expression")
+	assert_equals(
+		foldexpr,
+		"v:lua.require('notedown').notedown_foldexpr()",
+		"Should use custom notedown fold expression"
+	)
 	assert_equals(foldenable, true, "Folding should be enabled")
 
 	-- Position cursor on first header and wait for fold levels to be computed
@@ -559,15 +567,26 @@ local function test_manual_fold_operations()
 	local header_line = vim.fn.line(".")
 	assert_equals(header_line > 0, true, "Should find header")
 
+	-- Force fold computation by completely rebuilding folds
+	vim.cmd("setlocal nofoldenable") -- Disable folding
+	vim.wait(100)
+	vim.cmd("setlocal foldenable") -- Re-enable folding
+	vim.cmd("normal! zX") -- Clear all folds and recompute
+	vim.wait(200)
+
 	-- Wait for folding to be fully initialized and try to get fold levels
 	local fold_level = nil
-	local max_attempts = 20
+	local max_attempts = 10
 	for i = 1, max_attempts do
-		vim.wait(100) -- Wait for fold computation
+		vim.wait(200) -- Wait for fold computation
 		fold_level = vim.fn.foldlevel(header_line)
+
 		if fold_level and fold_level > 0 then
 			break
 		end
+
+		-- Force fold recomputation on every attempt
+		vim.cmd("normal! zX") -- Clear all folds and recompute
 	end
 
 	if fold_level and fold_level > 0 then

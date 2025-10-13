@@ -151,7 +151,7 @@ function M.setup(opts)
 			-- Enable LSP-based folding for notedown files
 			if vim.bo.filetype == "notedown" then
 				vim.opt_local.foldmethod = "expr"
-				vim.opt_local.foldexpr = "v:lua.vim.lsp.foldexpr()"
+				vim.opt_local.foldexpr = "v:lua.require('notedown').notedown_foldexpr()"
 				vim.opt_local.foldenable = true
 				vim.opt_local.foldlevel = 99 -- Start with all folds open
 
@@ -216,6 +216,59 @@ end
 
 -- Exposed for testing
 M._get_notedown_command_client = get_notedown_command_client
+
+-- Custom fold expression that uses LSP folding ranges
+-- This works around issues with vim.lsp.foldexpr() not computing fold levels correctly
+local folding_ranges_cache = {}
+
+function M.notedown_foldexpr()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local line_num = vim.v.lnum - 1 -- Convert to 0-based for LSP
+
+	-- Get current buffer version to check if cache is stale
+	local current_version = vim.api.nvim_buf_get_changedtick(bufnr)
+
+	-- Refresh cache if stale or empty
+	if not folding_ranges_cache[bufnr] or folding_ranges_cache[bufnr].version ~= current_version then
+		-- Use simpler client detection like test utilities
+		local clients = vim.lsp.get_clients({ name = "notedown" })
+		if #clients == 0 then
+			return 0
+		end
+
+		local client = clients[1]
+		local params = {
+			textDocument = { uri = vim.uri_from_bufnr(bufnr) },
+		}
+
+		-- Make synchronous request for folding ranges
+		local result, err = client.request_sync("textDocument/foldingRange", params, 1000)
+		if err or not result or not result.result then
+			return 0
+		end
+
+		-- Cache the folding ranges with version
+		folding_ranges_cache[bufnr] = {
+			ranges = result.result,
+			version = current_version,
+		}
+	end
+
+	local cache_entry = folding_ranges_cache[bufnr]
+	if not cache_entry or not cache_entry.ranges then
+		return 0
+	end
+
+	-- Find the deepest fold level for this line
+	local fold_level = 0
+	for _, range in ipairs(cache_entry.ranges) do
+		if line_num >= range.startLine and line_num <= range.endLine then
+			fold_level = fold_level + 1
+		end
+	end
+
+	return fold_level
+end
 
 -- Get list item boundaries via LSP command
 function M.get_list_item_boundaries()
