@@ -8,10 +8,11 @@ on:
 
 jobs:
   neovim:
-    name: neovim ${{ matrix.nvim-version }}
+    name: ${{ matrix.nvim-version }}
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         nvim-version: [v0.9.5, v0.10.2]
 
