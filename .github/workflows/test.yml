@@ -8,8 +8,12 @@ on:
 
 jobs:
   neovim:
-    name: neovim
+    name: neovim ${{ matrix.nvim-version }}
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        nvim-version: [v0.9.5, v0.10.2]
 
     steps:
     - name: Checkout code
@@ -19,4 +23,4 @@ jobs:
       uses: cachix/install-nix-action@v31
 
     - name: Run Neovim tests
-      run: make test
+      run: make test NVIM_VERSION=${{ matrix.nvim-version }}
