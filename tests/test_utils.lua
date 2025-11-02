@@ -311,9 +311,8 @@ tasks:
       name: "todo"
       description: "A task that needs to be completed"
     - value: "x"
-      name: "done" 
+      name: "done"
       description: "A completed task"
-      conceal: "✅"
 ]]
 
 	local handle = io.open(path .. "/.notedown/settings.yaml", "w")
