@@ -1,7 +1,3 @@
-> [!NOTE]
-> This is a mirror of the neovim directory from [notedownorg/notedown](https://github.com/notedownorg/notedown/tree/main/neovim).
-> Changes should be made in the source repository.
-
 # 📝 notedown.nvim
 
 A Neovim plugin for [Notedown Flavored Markdown](https://github.com/notedownorg/notedown) with intelligent LSP integration and workspace-aware parser selection.
@@ -14,7 +10,6 @@ A Neovim plugin for [Notedown Flavored Markdown](https://github.com/notedownorg/
 - ✂️ **List Text Object**: Precisely select, delete, yank, and manipulate list items with `dal`, `yal`, `cal`, `val`
 - 🏠 **Automatic Workspace Detection**: Uses notedown parser when `.notedown/` directory is found
 - 🧠 **Smart LSP Integration**: Seamless language server integration with document synchronization
-- 🚀 **LSP Integration**: Full Notedown Language Server Protocol support
 - ⚡ **Fast**: Efficient workspace detection with path-based matching
 - 🔧 **Configurable**: Flexible parser selection modes and workspace configuration
 
@@ -265,13 +260,13 @@ The plugin includes a comprehensive test suite using a simplified testing approa
 
 ```bash
 # Run all tests (builds LSP server and runs spec files)
-cd neovim && nvim -l tests/minit.lua
+nvim -l tests/minit.lua
 
 # Alternative: use shell wrapper
-cd neovim && ./scripts/test
+./scripts/test
 
 # Run specific spec file
-cd neovim && nvim -l tests/wikilink_spec.lua
+nvim -l tests/wikilink_spec.lua
 ```
 
 #### Docker Testing
@@ -340,17 +335,17 @@ If `make test-nvim` fails:
 2. **Check Permissions**:
    ```bash
    # Make test script executable
-   chmod +x neovim/scripts/test
+   chmod +x scripts/test
    ```
 
 3. **Debug Individual Tests**:
    ```bash
    # Run one spec file to isolate issues
-   cd neovim && nvim -l tests/config_spec.lua
+   nvim -l tests/config_spec.lua
    ```
 
 4. **Check Project Structure**:
-   - Ensure you're running from the neovim/ directory
+   - Ensure you're running from the repository root directory
    - Verify language-server/ directory exists in project root
 
 ## 🤝 Contributing
