@@ -1,9 +1,13 @@
 -- Simple init for feature tests without lazy.nvim complexity
 -- Based on the existing neovim/tests/helpers/minimal_init.lua approach
 
--- Get project root - go up 1 level from neovim directory to project root
-local project_root = vim.fn.fnamemodify(vim.fn.getcwd(), ":h")
+-- Get project root
+-- This is now a standalone neovim plugin repo
+-- In Docker: use pre-installed LSP binary
+-- Outside Docker: build from sibling notedown repo
 local neovim_plugin_path = vim.fn.getcwd()
+local is_docker = os.getenv("NOTEDOWN_TEST_DOCKER") == "1"
+local project_root = vim.fn.fnamemodify(vim.fn.getcwd(), ":h:h") .. "/notedown/move-nvim"
 
 -- Add notedown plugin to runtime path
 vim.opt.rtp:prepend(neovim_plugin_path)
@@ -16,15 +20,29 @@ print("🧪 notedown.nvim test suite")
 print("├─ 📁 " .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t"))
 print("├─ 🏠 " .. vim.fn.fnamemodify(project_root, ":t"))
 
--- Build LSP server binary
-local function build_lsp_binary()
-	print("├─ 🔨 Building LSP server")
+-- Get or build LSP server binary
+local function get_lsp_binary()
+	-- In Docker, use pre-installed binary
+	if is_docker then
+		print("├─ 🐳 Using Docker LSP binary")
+		local lsp_binary = os.getenv("NOTEDOWN_LSP_PATH") or "/opt/notedown-lsp/notedown-language-server"
+
+		if vim.fn.executable(lsp_binary) == 0 then
+			error("❌ LSP binary not found at: " .. lsp_binary)
+		end
+
+		print("│  └─ ✅ Binary ready at " .. lsp_binary)
+		return lsp_binary
+	end
+
+	-- Outside Docker, build from source
+	print("├─ 🔨 Building LSP server from source")
 
 	-- Verify language-server directory exists
 	local language_server_dir = project_root .. "/language-server"
 
 	if not vim.fn.isdirectory(language_server_dir) then
-		error("❌ Could not find language-server directory")
+		error("❌ Could not find language-server directory at: " .. language_server_dir)
 	end
 
 	-- Build LSP binary to temporary location
@@ -58,8 +76,8 @@ local function build_lsp_binary()
 	return lsp_binary
 end
 
--- Build LSP binary
-local lsp_binary = build_lsp_binary()
+-- Get or build LSP binary
+local lsp_binary = get_lsp_binary()
 
 print("├─ ⚙️  Setting up plugin")
 -- Configure notedown plugin with test LSP binary

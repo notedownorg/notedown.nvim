@@ -274,6 +274,33 @@ cd neovim && ./scripts/test
 cd neovim && nvim -l tests/wikilink_spec.lua
 ```
 
+#### Docker Testing
+
+For reproducible tests with controlled Neovim and LSP versions:
+
+```bash
+# Build and run tests in Docker (recommended for CI)
+make test-docker
+
+# Just build the Docker image
+make test-docker-build
+
+# Open a shell in the test container for debugging
+make test-docker-shell
+```
+
+**Benefits:**
+- Isolated environment with pinned Neovim v0.10.x
+- Pre-built notedown-language-server from releases
+- No local Go toolchain required
+- Consistent results across different machines
+
+**When to use:**
+- CI/CD pipelines
+- Verifying plugin works with specific Neovim versions
+- Debugging environment-specific issues
+- Testing without building LSP from source
+
 ### Test Structure
 
 Tests are organized in simple `*_spec.lua` files in the `tests/` directory:

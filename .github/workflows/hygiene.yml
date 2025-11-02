@@ -1,0 +1,25 @@
+name: hygiene
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  format:
+    name: format
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v31
+
+    - name: Check code formatting
+      run: make format
+
+    - name: Check dirty
+      run: make dirty

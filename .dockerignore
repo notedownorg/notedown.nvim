@@ -1,0 +1,38 @@
+# Git files
+.git
+.github
+.gitignore
+
+# Nix files
+flake.nix
+flake.lock
+result
+result-*
+
+# Build artifacts
+bin/
+notedown-lsp
+notedown-lsp-test
+notedown-language-server
+notedown-language-server-test
+
+# Test artifacts
+.test-workspace/
+
+# Documentation (not needed in container)
+LICENSE
+CLAUDE.md
+DEVELOPMENT.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS files
+.DS_Store
+
+# Claude Code config
+.claude/

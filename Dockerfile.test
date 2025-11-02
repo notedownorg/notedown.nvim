@@ -1,0 +1,59 @@
+# Copyright 2024 Notedown Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Docker test environment for notedown.nvim
+# Provides isolated environment with specific Neovim and LSP versions
+
+FROM --platform=linux/amd64 debian:12-slim
+ARG NVIM_VERSION=v0.10.2
+ARG LSP_VERSION=v0.1.0
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    ca-certificates \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Neovim from official releases
+RUN curl -LO "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux64.tar.gz" \
+    && tar -xzf nvim-linux64.tar.gz \
+    && mv nvim-linux64 /opt/nvim \
+    && ln -s /opt/nvim/bin/nvim /usr/local/bin/nvim \
+    && rm nvim-linux64.tar.gz
+
+# Install notedown-language-server from GitHub releases
+RUN mkdir -p /opt/notedown-lsp \
+    && curl -L "https://github.com/notedownorg/notedown/releases/download/${LSP_VERSION}/notedown-language-server_Linux_x86_64.tar.gz" -o /tmp/notedown-lsp.tar.gz \
+    && tar -xzf /tmp/notedown-lsp.tar.gz -C /opt/notedown-lsp \
+    && chmod +x /opt/notedown-lsp/notedown-language-server \
+    && rm /tmp/notedown-lsp.tar.gz
+
+# Set up working directory
+WORKDIR /app
+
+# Copy plugin files
+COPY lua/ /app/lua/
+COPY plugin/ /app/plugin/
+COPY tests/ /app/tests/
+COPY scripts/ /app/scripts/
+COPY README.md /app/
+
+# Set environment variable to indicate Docker environment
+ENV NOTEDOWN_TEST_DOCKER=1
+ENV NOTEDOWN_LSP_PATH=/opt/notedown-lsp/notedown-language-server
+
+# Default command: run tests
+CMD ["./scripts/test"]
