@@ -28,11 +28,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Neovim from official releases
-RUN curl -LO "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux64.tar.gz" \
-    && tar -xzf nvim-linux64.tar.gz \
-    && mv nvim-linux64 /opt/nvim \
-    && ln -s /opt/nvim/bin/nvim /usr/local/bin/nvim \
-    && rm nvim-linux64.tar.gz
+# Try new naming first (0.11+), fallback to old naming (0.10)
+RUN (curl -LO "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux-x86_64.tar.gz" && \
+     tar -xzf nvim-linux-x86_64.tar.gz && rm nvim-linux-x86_64.tar.gz) || \
+    (curl -LO "https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux64.tar.gz" && \
+     tar -xzf nvim-linux64.tar.gz && rm nvim-linux64.tar.gz) && \
+    mv nvim-linux* /opt/nvim && \
+    ln -s /opt/nvim/bin/nvim /usr/local/bin/nvim
 
 # Install notedown-language-server from GitHub releases
 RUN mkdir -p /opt/notedown-lsp \
