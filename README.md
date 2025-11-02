@@ -2,8 +2,6 @@
 
 A Neovim plugin for [Notedown Flavored Markdown](https://github.com/notedownorg/notedown) with intelligent LSP integration and workspace-aware parser selection.
 
-<!-- TODO: Add screenshot here -->
-
 ## ✨ Features
 
 - 🔗 **Wikilink Support**: Intelligent completion and navigation for `[[wikilinks]]`
@@ -15,7 +13,7 @@ A Neovim plugin for [Notedown Flavored Markdown](https://github.com/notedownorg/
 
 ## ⚡️ Requirements
 
-- Neovim >= 0.9.0
+- Neovim >= 0.10.0
 - [notedown-language-server](https://github.com/notedownorg/notedown) (built and available in PATH)
 - Neovim with LSP support (for folding support in notedown files)
 
