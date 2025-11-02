@@ -36,7 +36,9 @@ dirty:
 format: licenser
 	stylua lua/ plugin/ tests/
 
-test:
+test: test-docker
+
+test-local:
 	./scripts/test
 
 test-docker-build:
@@ -54,4 +56,4 @@ test-docker-shell:
 licenser:
 	licenser apply -r "Notedown Authors"
 
-.PHONY: all hygiene dirty format test test-docker test-docker-build test-docker-shell licenser
+.PHONY: all hygiene dirty format test test-local test-docker test-docker-build test-docker-shell licenser
