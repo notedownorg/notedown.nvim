@@ -1,0 +1,9 @@
+# Build output
+bin/
+
+# Neovim test artifacts
+notedown-language-server
+notedown-language-server-test
+
+# LSP log files
+*.log
