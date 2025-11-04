@@ -116,7 +116,7 @@ If `make test-nvim` fails:
 
 4. **Check Project Structure**:
    - Ensure you're running from the repository root directory
-   - Verify language-server/ directory exists in project root
+   - For local builds: Clone language-server repo as sibling directory
 
 ## 🤝 Contributing
 
