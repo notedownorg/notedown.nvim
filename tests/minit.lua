@@ -4,10 +4,10 @@
 -- Get project root
 -- This is now a standalone neovim plugin repo
 -- In Docker: use pre-installed LSP binary
--- Outside Docker: build from sibling notedown repo
+-- Outside Docker: build from sibling language-server repo
 local neovim_plugin_path = vim.fn.getcwd()
 local is_docker = os.getenv("NOTEDOWN_TEST_DOCKER") == "1"
-local project_root = vim.fn.fnamemodify(vim.fn.getcwd(), ":h:h") .. "/notedown/move-nvim"
+local project_root = vim.fn.fnamemodify(vim.fn.getcwd(), ":h")
 
 -- Add notedown plugin to runtime path
 vim.opt.rtp:prepend(neovim_plugin_path)
@@ -38,28 +38,33 @@ local function get_lsp_binary()
 	-- Outside Docker, build from source
 	print("├─ 🔨 Building LSP server from source")
 
-	-- Verify language-server directory exists
+	-- Verify language-server directory exists (sibling to notedown.nvim)
 	local language_server_dir = project_root .. "/language-server"
 
 	if not vim.fn.isdirectory(language_server_dir) then
-		error("❌ Could not find language-server directory at: " .. language_server_dir)
+		error(
+			"❌ Could not find language-server directory at: "
+				.. language_server_dir
+				.. "\n"
+				.. "   Please clone https://github.com/notedownorg/language-server as a sibling directory"
+		)
 	end
 
 	-- Build LSP binary to temporary location
 	local lsp_binary = vim.fn.tempname() .. "-notedown-language-server"
 
-	-- Change to project root and build
+	-- Change to language-server directory and build
 	local old_cwd = vim.fn.getcwd()
-	vim.cmd("cd " .. project_root)
+	vim.cmd("cd " .. language_server_dir)
 
 	local build_cmd = {
 		"go",
 		"build",
 		"-ldflags",
-		"-w -s -X github.com/notedownorg/notedown/pkg/version.version=test",
+		"-w -s -X github.com/notedownorg/language-server/pkg/version.version=test",
 		"-o",
 		lsp_binary,
-		"./language-server/",
+		"./cmd/notedown-language-server",
 	}
 
 	local result = vim.fn.system(build_cmd)

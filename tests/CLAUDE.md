@@ -177,10 +177,10 @@ ls -la tests/
 ```
 
 #### 3. Common Issues
-- **LSP build fails**: Check if Go is installed and language-server/ directory exists
-- **Plugin load fails**: Check if lua/notedown/ files exist and are readable  
+- **LSP build fails**: Check if Go is installed and language-server/ directory exists as sibling (clone from https://github.com/notedownorg/language-server)
+- **Plugin load fails**: Check if lua/notedown/ files exist and are readable
 - **Permission errors**: Ensure scripts/test is executable (`chmod +x scripts/test`)
-- **Wrong directory**: Ensure you're running from the neovim/ directory
+- **Wrong directory**: Ensure you're running from the notedown.nvim directory
 
 #### 4. Debug Individual Tests
 ```bash
@@ -191,6 +191,6 @@ nvim -l tests/folding_spec.lua
 ```
 
 #### 5. Verify Project Structure
-- Current directory should be `neovim/`  
-- Project root should be one level up (`../`)
-- Language-server directory should exist at `../language-server/`
+- Current directory should be `notedown.nvim/`
+- Language-server should be a sibling directory at `../language-server/`
+- Clone language-server from: https://github.com/notedownorg/language-server

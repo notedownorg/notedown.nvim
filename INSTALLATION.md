@@ -3,7 +3,7 @@
 ## ⚡️ Requirements
 
 - Neovim >= 0.10.0
-- [notedown-language-server](https://github.com/notedownorg/notedown) (built and available in PATH)
+- [notedown-language-server](https://github.com/notedownorg/language-server) (built and available in PATH)
 - Neovim with LSP support (for folding support in notedown files)
 
 ## Installing the Plugin

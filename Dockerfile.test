@@ -37,7 +37,7 @@ RUN (curl -fsSL "https://github.com/neovim/neovim/releases/download/${NVIM_VERSI
 
 # Install notedown-language-server from GitHub releases
 RUN mkdir -p /opt/notedown-lsp \
-    && curl -L "https://github.com/notedownorg/notedown/releases/download/${LSP_VERSION}/notedown-language-server_Linux_x86_64.tar.gz" -o /tmp/notedown-lsp.tar.gz \
+    && curl -L "https://github.com/notedownorg/language-server/releases/download/${LSP_VERSION}/notedown-language-server_Linux_x86_64.tar.gz" -o /tmp/notedown-lsp.tar.gz \
     && tar -xzf /tmp/notedown-lsp.tar.gz -C /opt/notedown-lsp \
     && chmod +x /opt/notedown-lsp/notedown-language-server \
     && rm /tmp/notedown-lsp.tar.gz

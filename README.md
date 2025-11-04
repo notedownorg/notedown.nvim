@@ -13,7 +13,7 @@ A Neovim plugin for [Notedown Flavored Markdown](https://github.com/notedownorg/
 
 ## 📦 Installation
 
-Requires Neovim >= 0.10.0 and [notedown-language-server](https://github.com/notedownorg/notedown) in your PATH.
+Requires Neovim >= 0.10.0 and [notedown-language-server](https://github.com/notedownorg/language-server) in your PATH.
 
 For detailed installation instructions including language server setup and plugin manager configurations, see [INSTALLATION.md](INSTALLATION.md).
 
@@ -37,5 +37,6 @@ This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) fo
 
 ## 🔗 Related Projects
 
-- [notedown](https://github.com/notedownorg/notedown) - The main Notedown language server and language specification
+- [language-server](https://github.com/notedownorg/language-server) - The Notedown language server
+- [notedown](https://github.com/notedownorg/notedown) - The Notedown language specification
 - [Obsidian](https://obsidian.md) - For wikilink inspiration

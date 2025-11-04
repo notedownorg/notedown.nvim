@@ -97,7 +97,7 @@ Tests use a simplified, self-contained approach inspired by folke/trouble.nvim:
 **No External Dependencies**: Pure Lua assertions, no busted/plenary/luaunit required
 
 **Real LSP Integration**: Tests build actual `notedown-language-server` binary:
-- Local: Builds from Go source in parent repo's `language-server/` directory
+- Local: Builds from Go source in sibling `language-server/` repository
 - Docker: Uses pre-installed binary from GitHub releases
 
 **Spec File Pattern**:
@@ -251,7 +251,7 @@ All Lua files must have Apache 2.0 license header:
 
 **Runtime**:
 - Neovim >= 0.10.0
-- `notedown-language-server` binary in PATH (from notedownorg/notedown releases)
+- `notedown-language-server` binary in PATH (from notedownorg/language-server releases)
 - TreeSitter support (built into Neovim 0.10+)
 
 **Development**:

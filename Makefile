@@ -50,9 +50,6 @@ test-docker-build:
 test-docker: test-docker-build
 	docker run --rm notedown-nvim:test
 
-test-docker-shell:
-	docker run --rm -it notedown-nvim:test bash
-
 licenser:
 	licenser apply -r "Notedown Authors"
 
